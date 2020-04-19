@@ -139,7 +139,7 @@ def main():
             print(NearestNeigbour)
             print(NewNode)
             print(NodeList)
-            ~CHANGES
+            # CHANGES
             #NewNode, NearestNeigbour = ChooseParent(NearestNeigbour, NewNode, NodeList)
             # commenting
             pygame.draw.line(screen, BLACK, [int(NearestNeigbour.x),
