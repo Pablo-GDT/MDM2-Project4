@@ -147,7 +147,7 @@ def main():
             # if intersects(NewNode, GoalNode):
             #     print('Done!')
             #     DrawSolutionPath(StartNode, GoalNode, NodeList, pygame, screen)
-
+            # check
         pygame.display.update()
 
 
