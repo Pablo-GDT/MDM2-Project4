@@ -133,6 +133,7 @@ def main():
             NewNodeCoords = StepToFrom([NearestNeigbour.x, NearestNeigbour.y], [
                                        RandomPoint.x, RandomPoint.y])
             NewNode = Node(NewNodeCoords[0], NewNodeCoords[1], 0.5)
+            NodeList.append(NewNode)
             print(NodeList)
             pygame.draw.circle(screen, RED, (int(NewNode.x), int(NewNode.y)), 1)
             print(NearestNeigbour)
@@ -140,7 +141,7 @@ def main():
             print(NodeList)
 
             #NewNode, NearestNeigbour = ChooseParent(NearestNeigbour, NewNode, NodeList)
-            # NodeList.append(NewNode)
+
             pygame.draw.line(screen, BLACK, [int(NearestNeigbour.x),
                                              int(NearestNeigbour.y)], [int(NewNode.x), int(NewNode.y)])
             # if intersects(NewNode, GoalNode):
