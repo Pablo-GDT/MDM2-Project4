@@ -141,7 +141,7 @@ def main():
             print(NodeList)
 
             #NewNode, NearestNeigbour = ChooseParent(NearestNeigbour, NewNode, NodeList)
-
+            # comment
             pygame.draw.line(screen, BLACK, [int(NearestNeigbour.x),
                                              int(NearestNeigbour.y)], [int(NewNode.x), int(NewNode.y)])
             # if intersects(NewNode, GoalNode):
