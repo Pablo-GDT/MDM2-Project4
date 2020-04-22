@@ -33,13 +33,17 @@ class Node:
         self.x = xcoord
         self.y = ycoord
         self.radius = radius
+        self.pathx = []
+        self.pathy = []
 
     def getX():
         return self.x
 
-    def getY():
-        return self.y
+    def getParentnodex(self):
+        return self.parent.x
 
+    def getParentnodey(self):
+        return self.parent.y
 # good ol pythag
 
 
@@ -57,27 +61,27 @@ def intersects(NewNode, GoalNode):
 
 
 def ChooseParent(NearestNeigbour, NewNode, NodeList):
-    for node in NodeList:
-        if dist([node.x, node.y], [NewNode.x, NewNode.y]) < RADIUS and (node.cost + dist([node.x, node.y], [NewNode.x, NewNode.y]) < NearestNeigbour.cost + dist([NearestNeigbour.x, NearestNeigbour.y], [NewNode.x, NewNode.y])):
-            NearestNeigbour = node
-            NewNode.cost = NearestNeigbour.cost + \
-                dist([NearestNeigbour.x, NearestNeigbour.y], [NewNode.x, NewNode.y])
-            NewNode.parent = NearestNeigbour
-            # print(NewNode.parent.x)
-            return NewNode, NearestNeigbour
+
+    NewNode.cost = NearestNeigbour.cost + \
+        dist([NearestNeigbour.x, NearestNeigbour.y], [NewNode.x, NewNode.y])
+    NewNode.parent = NearestNeigbour
+    # print(NewNode)
+
 
 # draw the successful route by calling the parent attribute iteratively
 
 
 def DrawSolutionPath(StartNode, GoalNode, NodeList, pygame, screen):
-    ORANGE = (255, 164, 0)
+    # ORANGE = (255, 164, 0)
+    Red = (255, 0, 0)
     NearestNeigbour = NodeList[0]
     for node in NodeList:
         if dist([node.x, node.y], [GoalNode.x, GoalNode.y]) < dist([NearestNeigbour.x, NearestNeigbour.y], [GoalNode.x, GoalNode.y]):
             NearestNeigbour = node
+    print("Total path distance ="+str(NearestNeigbour.cost))
     while NearestNeigbour != StartNode:
-        pygame.draw.line(screen, ORANGE, [NearestNeigbour.x, NearestNeigbour.y], [
-            NearestNeigbour.parent.x, NearestNeigbour.parent.y])
+        pygame.draw.line(screen, Red, [int(NearestNeigbour.x), int(NearestNeigbour.y)], [
+                         int(NearestNeigbour.getParentnodex()), int(NearestNeigbour.getParentnodey())])
         NearestNeigbour = NearestNeigbour.parent
         # print(NearestNeigbour)
 
@@ -96,12 +100,54 @@ def StepToFrom(NearestNeigbour, RandomPoint):
     # if point is less than the distance threshold from the nearest node add it
     # to the tree otherwise calculate the position
     # of the point at the threshold distance in that direction
-    if dist(NearestNeigbour, RandomPoint) < DistThreshold:
+    if dist(NearestNeigbour, RandomPoint) <= DistThreshold:
         return RandomPoint
     else:
         theta = np.arctan2((RandomPoint[1] - NearestNeigbour[1]),
                            (RandomPoint[0]-NearestNeigbour[0]))
-        return (round(NearestNeigbour[0] + np.cos(theta)*DistThreshold, 2), round(NearestNeigbour[1] + np.sin(theta)*DistThreshold, 2))
+        return (round(NearestNeigbour[0] + np.cos(theta)*DistThreshold, 0), round(NearestNeigbour[1] + np.sin(theta)*DistThreshold, 0))
+
+
+def find_path(MaxNodeNum, pygame, screen, NodeList, NearestNeigbour, StartNode, GoalNode,  RED, BLACK):
+    no_path = True
+
+    while no_path:
+        for i in range(MaxNodeNum):
+            # generate a random point in the screen
+            RandomPoint = Node(random.random()*XDIM, random.random()*YDIM, 1)
+            # find the nearest neighbour and connects the new point to it
+            for node in NodeList:
+                if dist([node.x, node.y], [RandomPoint.x, RandomPoint.y]) < dist([NearestNeigbour.x, NearestNeigbour.y], [RandomPoint.x, RandomPoint.y]):
+                    NearestNeigbour = node
+
+            NewNodeCoords = StepToFrom([NearestNeigbour.x, NearestNeigbour.y], [
+                RandomPoint.x, RandomPoint.y])
+            # creating node object at target destination
+            NewNode = Node(NewNodeCoords[0], NewNodeCoords[1], 0.5)
+            NewNode.parent = NearestNeigbour
+            # print(NearestNeigbour.x)
+            # print(NewNode.parent.x)
+            # print(NewNode.x)
+            NodeList.append(NewNode)
+            pygame.draw.circle(screen, RED, (int(NewNode.x), int(NewNode.y)), 1)
+
+            ChooseParent(NearestNeigbour, NewNode, NodeList)
+
+            # Draw line from Nearest Neightbour TO New Node
+            pygame.draw.line(screen, BLACK, [int(NearestNeigbour.x),
+                                             int(NearestNeigbour.y)], [int(NewNode.x), int(NewNode.y)])
+
+            if intersects(NewNode, GoalNode):
+                print('Done!')
+                # test(StartNode, NewNode, NearestNeigbour, NodeList, screen)
+                DrawSolutionPath(StartNode, GoalNode, NodeList, pygame, screen)
+                no_path = False
+                return
+            else:
+                pass
+            pygame.display.update()
+        return ("no path found")
+    pygame.display.update()
 
 
 def main():
@@ -126,6 +172,7 @@ def main():
 
         NodeList = []
 
+        print("working")
     # starting coordinates add to list and make it random tree starting point
         StartCoords = [300, 300]
         StartNode = Node(StartCoords[0], StartCoords[1], 10)
@@ -138,32 +185,9 @@ def main():
         GoalNode = Node(GoalCoords[0], GoalCoords[1], 10)
         pygame.draw.circle(screen, GREEN, (GoalCoords[0], GoalCoords[1]), 10)
 
-        for i in range(MaxNodeNum):
-            # generate a random point in the screen
-            RandomPoint = Node(random.random()*XDIM, random.random()*YDIM, 1)
-            # find the nearest neighbour and connects the new point to it
-            for node in NodeList:
-                if dist([node.x, node.y], [RandomPoint.x, RandomPoint.y]) < dist([NearestNeigbour.x, NearestNeigbour.y], [RandomPoint.x, RandomPoint.y]):
-                    NearestNeigbour = node
-
-            NewNodeCoords = StepToFrom([NearestNeigbour.x, NearestNeigbour.y], [
-                RandomPoint.x, RandomPoint.y])
-            # creating node object at target destination
-            NewNode = Node(NewNodeCoords[0], NewNodeCoords[1], 0.5)
-            NodeList.append(NewNode)
-            pygame.draw.circle(screen, RED, (int(NewNode.x), int(NewNode.y)), 1)
-
-            [NewNode, NearestNeigbour] = ChooseParent(NearestNeigbour, NewNode, NodeList)
-            # print(NearestNeigbour.parent.x)
-
-            # Draw line from Nearest Neightbour TO New Node
-            pygame.draw.line(screen, BLACK, [int(NearestNeigbour.x),
-                                             int(NearestNeigbour.y)], [int(NewNode.x), int(NewNode.y)])
-            if intersects(NewNode, GoalNode):
-                print('Done!')
-                test(StartNode, NewNode, NearestNeigbour, NodeList, screen)
-                # DrawSolutionPath(StartNode, GoalNode, NodeList, pygame, screen)
-        pygame.display.update()
+        find_path(MaxNodeNum, pygame, screen, NodeList,
+                  NearestNeigbour, StartNode, GoalNode, RED, BLACK)
+        running = False
 
 
 if __name__ == '__main__':
