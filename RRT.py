@@ -159,6 +159,7 @@ def main():
 
     path_found = False
 
+# run pygame untill done
     while not done:
         # quitting conditions
         for event in pygame.event.get():
