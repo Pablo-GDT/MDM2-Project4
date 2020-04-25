@@ -16,7 +16,7 @@ WINSIZE = [XDIM, YDIM]
 DistThreshold = 8
 
 # max number of nodes in a tree
-MaxNodeNum = 200
+MaxNodeNum = 1000
 RADIUS = 5
 
 
@@ -128,16 +128,17 @@ def find_path(MaxNodeNum, pygame, screen, NodeList, NearestNeigbour, StartNode, 
         # Draw line from Nearest Neightbour TO New Node
         pygame.draw.line(screen, BLACK, [int(NearestNeigbour.x),
                                          int(NearestNeigbour.y)], [int(NewNode.x), int(NewNode.y)])
-
+        #print(intersects(NewNode, GoalNode))
+        pygame.display.update()
         if intersects(NewNode, GoalNode) is True:
             print('Done!')
+
             # test(StartNode, NewNode, NearestNeigbour, NodeList, screen)
             DrawSolutionPath(StartNode, GoalNode, NodeList, pygame, screen)
             path_found = True
         else:
-            path_found = False
+            continue
 
-        pygame.display.update()
     print("find_path func:" + str(path_found))
     return path_found
 
@@ -176,7 +177,7 @@ def main():
         NearestNeigbour = NodeList[0]
 
     # goal coordinates
-        GoalCoords = [400, 400]
+        GoalCoords = [500, 500]
         GoalNode = Node(GoalCoords[0], GoalCoords[1], 10)
         pygame.draw.circle(screen, GREEN, (GoalCoords[0], GoalCoords[1]), 10)
 
@@ -185,9 +186,9 @@ def main():
             path_found = find_path(MaxNodeNum, pygame, screen, NodeList,
                                    NearestNeigbour, StartNode, GoalNode, RED, BLACK, path_found)
             print("in if statement:" + str(path_found))
-            done = True
-        else:
 
+        else:
+            pygame.display.update()
             continue
 
 
