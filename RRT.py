@@ -22,26 +22,50 @@ RADIUS = 5
 
 class CircleObstacle(pygame.sprite.Sprite):
 
-    def __init__(self, screen, WINSIZE, StartCoords, GoalCoords):
-        super(CircleObstacle, self).__init__(self)
-        self.radius = 20
+    def __init__(self, screen, x, y, radius, StartCoords, GoalCoords):
         GREY = (50, 50, 50)
-        pygame.draw.circle(screen, GREY, (random.random()*XDIM, random.random()*YDIM), self.radius)
+        pygame.sprite.Sprite.__init__(self)
+
+        self.x = x
+        self.y = y
+        self.radius = radius
+        self.circle_Surface = pygame.Surface((radius*2, radius*2), pygame.SRCALPHA)
+        self.rect = self.circle_Surface.get_rect()
+        # Draw a circle onto the `circle` surface.
+        # self.circle = pygame.draw.circle(screen, GREY, (int(random.random()*WINSIZE[0]), int(random.random()*WINSIZE[1])), self.radius)
+        # draw circle in the centre of the obstacle surface
+        self.circle = pygame.draw.circle(
+            self.circle_Surface, GREY, (radius, radius), self.radius)
+        self.mask = pygame.mask.from_surface(self.circle_Surface)
+        screen.blit(self.circle_Surface, [int(self.x), int(self.y)])
+
+    def CollisionChecker(self, group1):
+
+        if pygame.sprite.spritecollide(self, group1, False, pygame.sprite.collide_mask(self.mask)):
+            return True
+        else:
+            return False
 
 
-class Node:
+class Node(pygame.sprite.Sprite):
 
     x = 0
     y = 0
     cost = 0
     parent = None
 
-    def __init__(self, xcoord, ycoord, radius):
+    def __init__(self, screen, xcoord, ycoord, radius):
+        pygame.sprite.Sprite.__init__(self)
         self.x = xcoord
         self.y = ycoord
         self.radius = radius
         self.pathx = []
         self.pathy = []
+
+        self.circle_Surface = pygame.Surface((radius*2, radius*2), pygame.SRCALPHA)
+        self.rect = self.circle_Surface.get_rect()
+        self.mask = pygame.mask.from_surface(self.circle_Surface)
+        screen.blit(self.circle_Surface, [int(self.x), int(self.y)])
 
     def getX():
         return self.x
@@ -105,11 +129,11 @@ def StepToFrom(NearestNeigbour, RandomPoint):
         return (round(NearestNeigbour[0] + np.cos(theta)*DistThreshold, 0), round(NearestNeigbour[1] + np.sin(theta)*DistThreshold, 0))
 
 
-def find_path(MaxNodeNum, pygame, screen, NodeList, NearestNeigbour, StartNode, GoalNode,  RED, BLACK, path_found):
+def find_path(MaxNodeNum, pygame, screen, NodeList, NearestNeigbour, StartNode, GoalNode,  RED, BLACK, path_found, obstacles):
 
     for i in range(MaxNodeNum):
         # generate a random point in the screen
-        RandomPoint = Node(random.random()*XDIM, random.random()*YDIM, 1)
+        RandomPoint = Node(screen, random.random()*XDIM, random.random()*YDIM, 1)
         # find the nearest neighbour and connect the new point to it
         for node in NodeList:
             if dist([node.x, node.y], [RandomPoint.x, RandomPoint.y]) < dist([NearestNeigbour.x, NearestNeigbour.y], [RandomPoint.x, RandomPoint.y]):
@@ -118,28 +142,37 @@ def find_path(MaxNodeNum, pygame, screen, NodeList, NearestNeigbour, StartNode, 
         NewNodeCoords = StepToFrom([NearestNeigbour.x, NearestNeigbour.y], [
             RandomPoint.x, RandomPoint.y])
         # creating node object at target destination
-        NewNode = Node(NewNodeCoords[0], NewNodeCoords[1], 0.5)
-
+        NewNode = Node(screen, NewNodeCoords[0], NewNodeCoords[1], 1)
         NodeList.append(NewNode)
-        pygame.draw.circle(screen, RED, (int(NewNode.x), int(NewNode.y)), 1)
 
+        NodeGroup = pygame.sprite.Group()
+        NodeGroup.add(NewNode)
+        # collision = pygame.sprite.spritecollide(
+        #     NewNode, obstacles[0], False, pygame.sprite.collide_mask)
+        # collision = pygame.sprite.collide_mask(NewNode, obstacles)
+        collision = pygame.sprite.groupcollide(NodeGroup, obstacles, True, False)
+        # print(obstacles)
+        print(collision)
+        if collision is not None:
+            print("collision")
+        else:
+            continue
+        pygame.draw.circle(screen, RED, (int(NewNode.x), int(NewNode.y)), 1)
         ChooseParent(NearestNeigbour, NewNode, NodeList)
 
         # Draw line from Nearest Neightbour TO New Node
         pygame.draw.line(screen, BLACK, [int(NearestNeigbour.x),
                                          int(NearestNeigbour.y)], [int(NewNode.x), int(NewNode.y)])
-        #print(intersects(NewNode, GoalNode))
+        # print(intersects(NewNode, GoalNode))
         pygame.display.update()
         if intersects(NewNode, GoalNode) is True:
             print('Done!')
-
-            # test(StartNode, NewNode, NearestNeigbour, NodeList, screen)
             DrawSolutionPath(StartNode, GoalNode, NodeList, pygame, screen)
             path_found = True
         else:
             continue
 
-    print("find_path func:" + str(path_found))
+    # print("find_path func:" + str(path_found))
     return path_found
 
 
@@ -160,6 +193,7 @@ def main():
 
     path_found = False
 
+
 # run pygame untill done
     while not done:
         # quitting conditions
@@ -171,21 +205,27 @@ def main():
 
     # starting coordinates add to list and make it random tree starting point
         StartCoords = [300, 300]
-        StartNode = Node(StartCoords[0], StartCoords[1], 10)
+        StartNode = Node(screen, StartCoords[0], StartCoords[1], 10)
         pygame.draw.circle(screen, BLUE, (StartCoords[0], StartCoords[1]), 10)
         NodeList.append(StartNode)
         NearestNeigbour = NodeList[0]
 
     # goal coordinates
         GoalCoords = [500, 500]
-        GoalNode = Node(GoalCoords[0], GoalCoords[1], 10)
+        GoalNode = Node(screen, GoalCoords[0], GoalCoords[1], 10)
         pygame.draw.circle(screen, GREEN, (GoalCoords[0], GoalCoords[1]), 10)
 
-        print("outside if statement:" + str(path_found))
+    # instantiating obsticles
+        obstacles = pygame.sprite.Group()
+        obsticle1 = CircleObstacle(screen, 200, 100, 60, StartCoords, GoalCoords)
+        obsticle2 = CircleObstacle(screen, 200, 50, 20, StartCoords, GoalCoords)
+        obstacles.add(obsticle1)
+
+        # print("outside if statement:" + str(path_found))
         if path_found is False:
             path_found = find_path(MaxNodeNum, pygame, screen, NodeList,
-                                   NearestNeigbour, StartNode, GoalNode, RED, BLACK, path_found)
-            print("in if statement:" + str(path_found))
+                                   NearestNeigbour, StartNode, GoalNode, RED, BLACK, path_found, obstacles)
+            # print("in if statement:" + str(path_found))
 
         else:
             pygame.display.update()
