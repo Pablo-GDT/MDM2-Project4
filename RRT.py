@@ -154,24 +154,24 @@ def find_path(MaxNodeNum, pygame, screen, NodeList, NearestNeigbour, StartNode, 
         # print(obstacles)
         print(collision)
         if collision is not None:
-            print("collision")
-        else:
-            continue
+            print("colision")
+            pygame.display.update()
+
         pygame.draw.circle(screen, RED, (int(NewNode.x), int(NewNode.y)), 1)
         ChooseParent(NearestNeigbour, NewNode, NodeList)
 
         # Draw line from Nearest Neightbour TO New Node
         pygame.draw.line(screen, BLACK, [int(NearestNeigbour.x),
                                          int(NearestNeigbour.y)], [int(NewNode.x), int(NewNode.y)])
-        # print(intersects(NewNode, GoalNode))
+        # print(intersects(NewNode, GoalNode))/
         pygame.display.update()
         if intersects(NewNode, GoalNode) is True:
-            print('Done!')
+            # print('Done!'
             DrawSolutionPath(StartNode, GoalNode, NodeList, pygame, screen)
             path_found = True
         else:
             continue
-
+    pygame.display.update()
     # print("find_path func:" + str(path_found))
     return path_found
 
